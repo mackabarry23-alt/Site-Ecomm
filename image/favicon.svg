@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lueur d'Ambre">
+  <rect width="64" height="64" rx="16" fill="#f7f1ea" />
+  <path d="M32 12c4 5 7 9 7 14 0 4-3 7-7 7s-7-3-7-7c0-5 3-9 7-14Z" fill="#d4a373" />
+  <path d="M32 17c2 3 3 5 3 8 0 2-1 4-3 4s-3-2-3-4c0-3 1-5 3-8Z" fill="#fff7ed" />
+  <path d="M21 31h22l-2 17a6 6 0 0 1-6 5H29a6 6 0 0 1-6-5l-2-17Z" fill="#8b5e3c" />
+  <path d="M18 31h28" stroke="#6f482d" stroke-width="4" stroke-linecap="round" />
+</svg>
