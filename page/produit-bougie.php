@@ -42,13 +42,13 @@ require __DIR__ . '/includes/header.php';
   <?php elseif ($product === null): ?>
     <article class="detail empty-state">
       <h3>Bougie introuvable</h3>
-      <p>La bougie demandee n'est pas disponible. Retourne au <a href="/page/catalogue-bougies.php">catalogue</a> pour choisir une autre senteur.</p>
+      <p>La bougie demandee n'est pas disponible. Retourne au <a href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">catalogue</a> pour choisir une autre senteur.</p>
     </article>
   <?php else: ?>
     <nav class="breadcrumb" aria-label="Fil d'Ariane">
-      <a href="/page/index.php">Accueil</a>
+      <a href="<?= escape(app_url('page/index.php')) ?>">Accueil</a>
       <span>/</span>
-      <a href="/page/catalogue-bougies.php">Catalogue</a>
+      <a href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Catalogue</a>
       <span>/</span>
       <span><?= escape($product['nom']) ?></span>
     </nav>
@@ -98,7 +98,7 @@ require __DIR__ . '/includes/header.php';
               <?= $product['in_stock'] ? 'Ajouter au panier' : 'Indisponible' ?>
             </button>
           </div>
-          <a class="btn btn-ghost btn-browse" href="/page/catalogue-bougies.php">Voir toutes les bougies</a>
+          <a class="btn btn-ghost btn-browse" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Voir toutes les bougies</a>
         </div>
 
         <ul class="bullets">

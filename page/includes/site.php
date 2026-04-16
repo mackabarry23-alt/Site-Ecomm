@@ -10,6 +10,52 @@ function ensure_session_started(): void
 
 ensure_session_started();
 
+function app_base_path(): string
+{
+    static $basePath = null;
+
+    if ($basePath !== null) {
+        return $basePath;
+    }
+
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $scriptFilename = realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? ''));
+    $projectRoot = realpath(__DIR__ . '/../../');
+
+    if ($scriptName !== '' && $scriptFilename !== false && $projectRoot !== false) {
+        $normalizedScriptFilename = str_replace('\\', '/', $scriptFilename);
+        $normalizedProjectRoot = rtrim(str_replace('\\', '/', $projectRoot), '/');
+
+        if (str_starts_with($normalizedScriptFilename, $normalizedProjectRoot . '/')) {
+            $relativeScript = ltrim(substr($normalizedScriptFilename, strlen($normalizedProjectRoot)), '/');
+
+            if ($relativeScript !== '' && str_ends_with($scriptName, $relativeScript)) {
+                $basePath = substr($scriptName, 0, -strlen($relativeScript));
+            }
+        }
+    }
+
+    if (!is_string($basePath)) {
+        $basePath = '';
+    }
+
+    $basePath = rtrim($basePath, '/');
+
+    return $basePath === '/' ? '' : $basePath;
+}
+
+function app_url(string $path = ''): string
+{
+    $basePath = app_base_path();
+    $cleanPath = ltrim($path, '/');
+
+    if ($cleanPath === '') {
+        return $basePath === '' ? '/' : $basePath . '/';
+    }
+
+    return ($basePath === '' ? '' : $basePath) . '/' . $cleanPath;
+}
+
 function get_pdo(): PDO
 {
     static $pdo = null;
@@ -275,18 +321,18 @@ function candle_image_library(): array
 {
     return [
         'vanille' => [
-            'petite' => '/image/bougie-vanille-petite.png',
-            'grande' => '/image/bougie-vanille-grande.png',
+            'petite' => app_url('image/bougie-vanille-petite.png'),
+            'grande' => app_url('image/bougie-vanille-grande.png'),
         ],
         'lavande' => [
-            'petite' => '/image/bougie-lavande-petite.png',
-            'grande' => '/image/bougie-lavande-grande.png',
+            'petite' => app_url('image/bougie-lavande-petite.png'),
+            'grande' => app_url('image/bougie-lavande-grande.png'),
         ],
         'bois-de-santal' => [
-            'petite' => '/image/bougie-bois-de-santal-petite.png',
+            'petite' => app_url('image/bougie-bois-de-santal-petite.png'),
         ],
         'fleur-de-coton' => [
-            'grande' => '/image/bougie-fleur-de-coton-grande.png',
+            'grande' => app_url('image/bougie-fleur-de-coton-grande.png'),
         ],
     ];
 }

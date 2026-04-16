@@ -42,7 +42,7 @@ require __DIR__ . '/includes/header.php';
         <article class="detail empty-state">
           <h3>Commande introuvable</h3>
           <p>Le recapitulatif demande n'existe pas ou n'est plus accessible.</p>
-          <a class="btn" href="/page/catalogue-bougies.php">Retourner au catalogue</a>
+          <a class="btn" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Retourner au catalogue</a>
         </article>
       <?php else: ?>
         <section class="confirmation-grid">
@@ -86,8 +86,8 @@ require __DIR__ . '/includes/header.php';
           </div>
 
           <div class="checkout-actions">
-            <a class="btn" href="/page/catalogue-bougies.php">Continuer mes achats</a>
-            <a class="btn btn-ghost" href="/page/index.php">Retour a l'accueil</a>
+            <a class="btn" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Continuer mes achats</a>
+            <a class="btn btn-ghost" href="<?= escape(app_url('page/index.php')) ?>">Retour a l'accueil</a>
           </div>
         </article>
       <?php endif; ?>

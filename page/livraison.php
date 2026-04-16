@@ -38,10 +38,10 @@ require __DIR__ . '/includes/header.php';
           <article class="detail empty-state">
             <h3>Livraison indisponible</h3>
             <p><?= escape($cartIssues[0]) ?></p>
-            <a class="btn" href="/page/panier.php">Retourner au panier</a>
+            <a class="btn" href="<?= escape(app_url('page/panier.php')) ?>">Retourner au panier</a>
           </article>
         <?php else: ?>
-          <form class="checkout-form" action="/page/actions/confirmer-commande.php" method="post">
+          <form class="checkout-form" action="<?= escape(app_url('page/actions/confirmer-commande.php')) ?>" method="post">
             <article class="detail form-card">
               <div class="section-heading-left">
                 <span class="section-kicker">Commanditaire</span>
@@ -103,7 +103,7 @@ require __DIR__ . '/includes/header.php';
 
             <div class="checkout-actions">
               <button class="btn" type="submit">Confirmer la commande</button>
-              <a class="btn btn-ghost" href="/page/panier.php">Retour au panier</a>
+              <a class="btn btn-ghost" href="<?= escape(app_url('page/panier.php')) ?>">Retour au panier</a>
             </div>
           </form>
         <?php endif; ?>

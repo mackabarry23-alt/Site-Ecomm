@@ -44,7 +44,7 @@ require __DIR__ . '/includes/header.php';
         <article class="detail empty-state" data-cart-empty<?= $cartLines !== [] ? ' hidden' : '' ?>>
           <h3>Ton panier est vide</h3>
           <p>Ajoute une bougie vanillee, florale ou boisee pour commencer ta selection.</p>
-          <a class="btn" href="/page/catalogue-bougies.php">Explorer les bougies</a>
+          <a class="btn" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Explorer les bougies</a>
         </article>
 
         <div class="cart-lines" data-cart-lines<?= $cartLines === [] ? ' hidden' : '' ?>>
@@ -123,10 +123,10 @@ require __DIR__ . '/includes/header.php';
           <strong data-cart-total-tvac><?= format_price($cartTotalTvac) ?></strong>
         </div>
         <p class="summary-note">La validation du panier t'envoie vers la page de livraison pour finaliser la commande.</p>
-        <form class="summary-form" action="/page/actions/valider-panier.php" method="post">
+        <form class="summary-form" action="<?= escape(app_url('page/actions/valider-panier.php')) ?>" method="post">
           <button class="btn" type="submit" data-checkout-button<?= $cartLines === [] ? ' disabled aria-disabled="true"' : '' ?>>Valider mon panier</button>
         </form>
-        <a class="btn" href="/page/catalogue-bougies.php">Continuer mes achats</a>
+        <a class="btn" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Continuer mes achats</a>
       </aside>
     </div>
   </section>

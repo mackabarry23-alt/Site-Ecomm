@@ -38,7 +38,7 @@ require __DIR__ . '/includes/header.php';
         </div>
 
         <?php if ($dbError === null && $filters !== null): ?>
-          <form method="get" action="/page/catalogue-bougies.php">
+          <form method="get" action="<?= escape(app_url('page/catalogue-bougies.php')) ?>">
             <div class="filter-group">
               <label class="filter-label" for="q">Recherche</label>
               <input id="q" class="input" type="search" name="q" value="<?= escape($filters['q']) ?>" placeholder="Ex. vanille, lavande..." />
@@ -85,7 +85,7 @@ require __DIR__ . '/includes/header.php';
 
             <div class="filter-actions">
               <button class="btn" type="submit">Appliquer</button>
-              <a class="btn btn-ghost" href="/page/catalogue-bougies.php">Reinitialiser</a>
+              <a class="btn btn-ghost" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Reinitialiser</a>
             </div>
           </form>
         <?php else: ?>

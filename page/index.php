@@ -25,7 +25,7 @@ require __DIR__ . '/includes/header.php';
       <h1>Des bougies parfumees pour rechauffer chaque piece</h1>
       <p>Bienvenue chez Lueur d'Ambre. Decouvre des bougies aux notes vanillees, florales et boisees pour creer une ambiance apaisante a la maison.</p>
       <div class="hero-actions">
-        <a class="btn" href="/page/catalogue-bougies.php">Decouvrir le catalogue</a>
+        <a class="btn" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Decouvrir le catalogue</a>
       </div>
     </div>
   </section>

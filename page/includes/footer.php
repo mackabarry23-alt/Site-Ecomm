@@ -12,9 +12,9 @@ declare(strict_types=1);
         <div class="footer-section">
           <h3>Navigation</h3>
           <ul>
-            <li><a href="/page/index.php">Accueil</a></li>
-            <li><a href="/page/catalogue-bougies.php">Catalogue</a></li>
-            <li><a href="/page/panier.php">Panier</a></li>
+            <li><a href="<?= escape(app_url('page/index.php')) ?>">Accueil</a></li>
+            <li><a href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Catalogue</a></li>
+            <li><a href="<?= escape(app_url('page/panier.php')) ?>">Panier</a></li>
           </ul>
         </div>
 
@@ -147,7 +147,7 @@ declare(strict_types=1);
         button.disabled = true;
       }
 
-      axios.postForm('/page/actions/ajouter-panier.php', {
+      axios.postForm('<?= escape(app_url('page/actions/ajouter-panier.php')) ?>', {
         product_id: productId,
         quantity: safeQuantity
       })
@@ -254,7 +254,7 @@ declare(strict_types=1);
 
       setCartLineBusy(productId, true);
 
-      axios.postForm('/page/actions/modifier-panier.php', {
+      axios.postForm('<?= escape(app_url('page/actions/modifier-panier.php')) ?>', {
         product_id: productId,
         quantity: safeQuantity
       })
