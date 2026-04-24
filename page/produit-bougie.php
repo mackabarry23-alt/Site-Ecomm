@@ -1,12 +1,16 @@
 <?php
 declare(strict_types=1);
 
+// On charge les fonctions communes du site.
 require_once __DIR__ . '/includes/site.php';
 
 $dbError = null;
 $product = null;
+
+// On lit l'identifiant du produit dans l'URL.
 $productId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
+// Si aucun id n'est fourni, on affiche une bougie mise en avant.
 try {
     if ($productId !== null && $productId !== false) {
         $product = fetch_product_by_id((int) $productId);
@@ -23,6 +27,7 @@ if ($dbError === null && $product === null) {
     http_response_code(404);
 }
 
+// Titre et description utilises dans l'onglet du navigateur.
 $pageTitle = $product !== null
     ? $product['nom'] . " - Lueur d'Ambre"
     : "Bougie introuvable - Lueur d'Ambre";
@@ -69,6 +74,7 @@ require __DIR__ . '/includes/header.php';
         <div class="product-subtitle">Collection <?= escape(strtolower($product['category_label'])) ?></div>
         <h1 class="product-title"><?= escape($product['nom']) ?></h1>
 
+        <!-- Ces badges donnent les infos rapides les plus utiles -->
         <div class="product-badges">
           <span class="badge <?= $product['in_stock'] ? 'badge-stock' : 'badge-oos' ?>">
             <?= $product['in_stock'] ? 'En stock' : 'Rupture' ?>
@@ -84,6 +90,7 @@ require __DIR__ . '/includes/header.php';
 
         <p class="lead"><?= escape($product['lead']) ?></p>
 
+        <!-- Zone d'achat : choix de la quantite puis ajout au panier -->
         <div class="buy-box">
           <label for="quantity" class="filter-label">Quantite</label>
           <div class="qty-row">

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+// Ce fichier contient l'en-tete commun a toutes les pages.
+// Les variables ci-dessous peuvent etre redefinies par chaque page.
 $pageTitle = $pageTitle ?? "Lueur d'Ambre";
 $metaDescription = $metaDescription ?? "Boutique de bougies parfumees aux ambiances douces et chaleureuses.";
 $activePage = $activePage ?? '';
@@ -19,6 +21,7 @@ $cartCount = cart_items_count();
 <body>
   <header>
     <div class="container">
+      <!-- Navigation principale du site -->
       <nav>
         <a class="logo" href="<?= escape(app_url('page/index.php')) ?>">Lueur d'Ambre</a>
         <ul class="nav-links">

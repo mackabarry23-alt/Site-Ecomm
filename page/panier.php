@@ -1,13 +1,16 @@
 <?php
 declare(strict_types=1);
 
+// On charge les fonctions communes du site.
 require_once __DIR__ . '/includes/site.php';
 
+// On prepare toutes les donnees affichees dans la page panier.
 $pageTitle = "Panier - Lueur d'Ambre";
 $metaDescription = "Retrouve les bougies ajoutees a ton panier.";
 $activePage = 'cart';
 $flash = pull_flash_message();
 $cartLines = fetch_cart_lines();
+$isCartEmpty = $cartLines === [];
 $cartCount = cart_items_count();
 $cartTotal = cart_total_price();
 $cartTotalTvac = cart_total_price_tvac();
@@ -41,13 +44,13 @@ require __DIR__ . '/includes/header.php';
           <div class="list-meta" data-cart-count-label><?= escape($cartCountLabel) ?></div>
         </div>
 
-        <article class="detail empty-state" data-cart-empty<?= $cartLines !== [] ? ' hidden' : '' ?>>
+        <article class="detail empty-state" data-cart-empty<?= !$isCartEmpty ? ' hidden' : '' ?>>
           <h3>Ton panier est vide</h3>
           <p>Ajoute une bougie vanillee, florale ou boisee pour commencer ta selection.</p>
           <a class="btn" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Explorer les bougies</a>
         </article>
 
-        <div class="cart-lines" data-cart-lines<?= $cartLines === [] ? ' hidden' : '' ?>>
+        <div class="cart-lines" data-cart-lines<?= $isCartEmpty ? ' hidden' : '' ?>>
           <?php foreach ($cartLines as $line): ?>
             <?php $product = $line['product']; ?>
             <article class="detail cart-line" data-cart-line="<?= (int) $product['id'] ?>">
@@ -124,7 +127,7 @@ require __DIR__ . '/includes/header.php';
         </div>
         <p class="summary-note">La validation du panier t'envoie vers la page de livraison pour finaliser la commande.</p>
         <form class="summary-form" action="<?= escape(app_url('page/actions/valider-panier.php')) ?>" method="post">
-          <button class="btn" type="submit" data-checkout-button<?= $cartLines === [] ? ' disabled aria-disabled="true"' : '' ?>>Valider mon panier</button>
+          <button class="btn" type="submit" data-checkout-button<?= $isCartEmpty ? ' disabled aria-disabled="true"' : '' ?>>Valider mon panier</button>
         </form>
         <a class="btn" href="<?= escape(app_url('page/catalogue-bougies.php')) ?>">Continuer mes achats</a>
       </aside>

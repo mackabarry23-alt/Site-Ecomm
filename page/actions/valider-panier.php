@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+// Action simple : on verifie le panier puis on redirige.
 require_once __DIR__ . '/../includes/site.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -8,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// On controle que le panier est encore coherent avant la livraison.
 $issues = cart_validation_issues();
 
 if ($issues !== []) {

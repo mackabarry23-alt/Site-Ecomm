@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+// -----------------------------------------------------------------------------
+// SESSION
+// -----------------------------------------------------------------------------
+// La session PHP sert a memoriser des informations entre deux pages :
+// le panier, les messages flash, le formulaire de livraison, etc.
 function ensure_session_started(): void
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -10,6 +15,11 @@ function ensure_session_started(): void
 
 ensure_session_started();
 
+// -----------------------------------------------------------------------------
+// URLS ET CONFIGURATION GENERALE
+// -----------------------------------------------------------------------------
+// Cette fonction retrouve le "dossier de base" du projet dans l'URL.
+// C'est utile si le site n'est pas installe a la racine du serveur.
 function app_base_path(): string
 {
     static $basePath = null;
@@ -18,6 +28,7 @@ function app_base_path(): string
         return $basePath;
     }
 
+    // On recupere le chemin du script appele par le navigateur.
     $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
     $scriptFilename = realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? ''));
     $projectRoot = realpath(__DIR__ . '/../../');
@@ -35,6 +46,7 @@ function app_base_path(): string
         }
     }
 
+    // Si on ne trouve rien, on retombe sur une racine vide.
     if (!is_string($basePath)) {
         $basePath = '';
     }
@@ -44,6 +56,8 @@ function app_base_path(): string
     return $basePath === '/' ? '' : $basePath;
 }
 
+// Cette fonction construit une URL complete a partir d'un chemin simple.
+// Exemple : app_url('page/panier.php')
 function app_url(string $path = ''): string
 {
     $basePath = app_base_path();
@@ -56,6 +70,8 @@ function app_url(string $path = ''): string
     return ($basePath === '' ? '' : $basePath) . '/' . $cleanPath;
 }
 
+// Cette fonction renvoie la connexion PDO a la base de donnees.
+// Le fichier config/database.php doit creer une variable $pdo.
 function get_pdo(): PDO
 {
     static $pdo = null;
@@ -73,16 +89,24 @@ function get_pdo(): PDO
     return $pdo;
 }
 
+// Cette fonction protege le HTML contre les caracteres speciaux.
+// On l'utilise avant d'afficher du texte venant de la base ou d'un formulaire.
 function escape(?string $value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
+// Formate un prix dans le style du site.
 function format_price(float $price): string
 {
     return number_format($price, 2, ',', ' ') . ' EUR';
 }
 
+// -----------------------------------------------------------------------------
+// MESSAGES FLASH
+// -----------------------------------------------------------------------------
+// Un message flash est un message temporaire affiche une seule fois
+// apres une redirection (succes, erreur, information...).
 function set_flash_message(string $type, string $message): void
 {
     $_SESSION['flash_message'] = [
@@ -99,26 +123,36 @@ function pull_flash_message(): ?array
     return is_array($flash) ? $flash : null;
 }
 
+// Libelle lisible pour le nombre d'articles dans le panier.
 function format_cart_count_label(int $count): string
 {
     return $count . ' article' . ($count > 1 ? 's' : '');
 }
 
+// TVA appliquee au projet.
 function vat_rate(): float
 {
     return 0.21;
 }
 
+// Transforme un ratio en pourcentage lisible.
+// Exemple : 0.21 devient "21".
 function format_percent(float $ratio): string
 {
     return (string) round($ratio * 100);
 }
 
+// Calcule le total TTC (TVAC) a partir du total HT.
 function calculate_total_tvac(float $totalHt): float
 {
     return round($totalHt * (1 + vat_rate()), 2);
 }
 
+// -----------------------------------------------------------------------------
+// PANIER
+// -----------------------------------------------------------------------------
+// Lit le panier en session. Le panier est stocke sous la forme :
+// [idProduit => quantite]
 function get_cart(): array
 {
     $cart = $_SESSION['panier'] ?? [];
@@ -126,6 +160,8 @@ function get_cart(): array
     return is_array($cart) ? $cart : [];
 }
 
+// Compte le nombre total d'articles dans le panier.
+// Si un produit a une quantite 3, cela compte pour 3 articles.
 function cart_items_count(): int
 {
     $total = 0;
@@ -137,6 +173,8 @@ function cart_items_count(): int
     return $total;
 }
 
+// Definit la quantite d'un produit dans le panier.
+// Si la quantite vaut 0 ou moins, on retire le produit.
 function set_cart_quantity(int $productId, int $quantity): int
 {
     $cart = get_cart();
@@ -152,6 +190,8 @@ function set_cart_quantity(int $productId, int $quantity): int
     return cart_items_count();
 }
 
+// Ajoute une quantite supplementaire au panier.
+// On peut limiter la quantite maximale avec le stock disponible.
 function add_to_cart(int $productId, int $quantity = 1, ?int $maxQuantity = null): int
 {
     $safeQuantity = max(1, $quantity);
@@ -165,11 +205,16 @@ function add_to_cart(int $productId, int $quantity = 1, ?int $maxQuantity = null
     return set_cart_quantity($productId, $targetQuantity);
 }
 
+// -----------------------------------------------------------------------------
+// LIVRAISON
+// -----------------------------------------------------------------------------
+// Liste des pays disponibles dans le formulaire de livraison.
 function delivery_countries(): array
 {
     return ['Belgique', 'France', 'Luxembourg', 'Pays-Bas'];
 }
 
+// Valeurs par defaut du formulaire de livraison.
 function default_delivery_form_data(): array
 {
     return [
@@ -183,26 +228,31 @@ function default_delivery_form_data(): array
     ];
 }
 
+// Nettoie les donnees recues depuis le formulaire :
+// - supprime les espaces inutiles
+// - remet un pays autorise si la valeur est invalide
 function sanitize_delivery_form_input(array $input): array
 {
+    $defaults = default_delivery_form_data();
     $countries = delivery_countries();
-    $country = trim((string) ($input['pays'] ?? 'Belgique'));
+    $country = trim((string) ($input['pays'] ?? $defaults['pays']));
 
     if (!in_array($country, $countries, true)) {
-        $country = 'Belgique';
+        $country = $defaults['pays'];
     }
 
     return [
-        'email' => trim((string) ($input['email'] ?? '')),
-        'nom' => trim((string) ($input['nom'] ?? '')),
-        'prenom' => trim((string) ($input['prenom'] ?? '')),
-        'rue' => trim((string) ($input['rue'] ?? '')),
-        'code_postal' => trim((string) ($input['code_postal'] ?? '')),
-        'ville' => trim((string) ($input['ville'] ?? '')),
+        'email' => trim((string) ($input['email'] ?? $defaults['email'])),
+        'nom' => trim((string) ($input['nom'] ?? $defaults['nom'])),
+        'prenom' => trim((string) ($input['prenom'] ?? $defaults['prenom'])),
+        'rue' => trim((string) ($input['rue'] ?? $defaults['rue'])),
+        'code_postal' => trim((string) ($input['code_postal'] ?? $defaults['code_postal'])),
+        'ville' => trim((string) ($input['ville'] ?? $defaults['ville'])),
         'pays' => $country,
     ];
 }
 
+// Recharge le formulaire depuis la session.
 function get_delivery_form_data(): array
 {
     $stored = $_SESSION['delivery_form'] ?? [];
@@ -210,16 +260,19 @@ function get_delivery_form_data(): array
     return sanitize_delivery_form_input(is_array($stored) ? $stored : []);
 }
 
+// Sauvegarde le formulaire dans la session.
 function store_delivery_form_data(array $data): void
 {
     $_SESSION['delivery_form'] = sanitize_delivery_form_input($data);
 }
 
+// Efface le formulaire une fois la commande terminee.
 function clear_delivery_form_data(): void
 {
     unset($_SESSION['delivery_form']);
 }
 
+// Verifie si les champs obligatoires sont bien remplis.
 function validate_delivery_form_data(array $data): array
 {
     $delivery = sanitize_delivery_form_input($data);
@@ -239,6 +292,7 @@ function validate_delivery_form_data(array $data): array
     return array_values(array_unique($errors));
 }
 
+// Construit une adresse multi-ligne a enregistrer dans la commande.
 function build_delivery_address_text(array $data): string
 {
     $delivery = sanitize_delivery_form_input($data);
@@ -251,6 +305,12 @@ function build_delivery_address_text(array $data): string
     ]);
 }
 
+// -----------------------------------------------------------------------------
+// PRODUITS
+// -----------------------------------------------------------------------------
+// Normalise un texte pour faciliter les recherches :
+// - minuscules
+// - suppression des accents quand c'est possible
 function normalize_text(string $text): string
 {
     $normalized = function_exists('mb_strtolower')
@@ -262,16 +322,22 @@ function normalize_text(string $text): string
     return $ascii !== false ? $ascii : $normalized;
 }
 
-function is_candle_product(array $product): bool
+// Regroupe les textes importants d'un produit dans une seule chaine.
+// Cela evite de reecrire la meme concatenation partout.
+function product_search_text(array $product): string
 {
-    $content = normalize_text(
-        ($product['nom'] ?? '') . ' ' .
-        ($product['description_courte'] ?? '') . ' ' .
-        ($product['description_longue'] ?? '')
-    );
+    return normalize_text(implode(' ', [
+        (string) ($product['nom'] ?? ''),
+        (string) ($product['description_courte'] ?? ''),
+        (string) ($product['description_longue'] ?? ''),
+    ]));
+}
 
-    foreach (['bougie', 'cire', 'meche', 'parfumee', 'senteur', 'combustion'] as $keyword) {
-        if (str_contains($content, $keyword)) {
+// Retourne true des qu'un mot-cle est trouve dans le texte.
+function contains_any_keyword(string $text, array $keywords): bool
+{
+    foreach ($keywords as $keyword) {
+        if (str_contains($text, $keyword)) {
             return true;
         }
     }
@@ -279,13 +345,21 @@ function is_candle_product(array $product): bool
     return false;
 }
 
+// Cette fonction permet de ne garder que les produits qui ressemblent
+// vraiment a des bougies dans la base de donnees.
+function is_candle_product(array $product): bool
+{
+    $content = product_search_text($product);
+
+    return contains_any_keyword($content, ['bougie', 'cire', 'meche', 'parfumee', 'senteur', 'combustion']);
+}
+
+// Devine une categorie simple a partir du texte du produit.
+// Comme la base de donnees ne stocke pas cette info directement,
+// on la reconstruit avec des mots-cles.
 function infer_product_category(array $product): array
 {
-    $content = normalize_text(
-        ($product['nom'] ?? '') . ' ' .
-        ($product['description_courte'] ?? '') . ' ' .
-        ($product['description_longue'] ?? '')
-    );
+    $content = product_search_text($product);
 
     $categories = [
         'gourmande' => [
@@ -307,16 +381,15 @@ function infer_product_category(array $product): array
     ];
 
     foreach ($categories as $slug => $category) {
-        foreach ($category['keywords'] as $keyword) {
-            if (str_contains($content, $keyword)) {
-                return ['slug' => $slug, 'label' => $category['label']];
-            }
+        if (contains_any_keyword($content, $category['keywords'])) {
+            return ['slug' => $slug, 'label' => $category['label']];
         }
     }
 
     return ['slug' => 'signature', 'label' => 'Signature'];
 }
 
+// Bibliotheque d'images disponibles pour les differentes senteurs.
 function candle_image_library(): array
 {
     return [
@@ -337,13 +410,10 @@ function candle_image_library(): array
     ];
 }
 
+// Devine la senteur principale du produit.
 function infer_product_scent(array $product): string
 {
-    $content = normalize_text(
-        ($product['nom'] ?? '') . ' ' .
-        ($product['description_courte'] ?? '') . ' ' .
-        ($product['description_longue'] ?? '')
-    );
+    $content = product_search_text($product);
 
     $scents = [
         'vanille' => ['vanille'],
@@ -353,16 +423,15 @@ function infer_product_scent(array $product): string
     ];
 
     foreach ($scents as $slug => $keywords) {
-        foreach ($keywords as $keyword) {
-            if (str_contains($content, $keyword)) {
-                return $slug;
-            }
+        if (contains_any_keyword($content, $keywords)) {
+            return $slug;
         }
     }
 
     return 'signature';
 }
 
+// Devine la taille a partir du nom du produit.
 function infer_size_slug(string $productName): string
 {
     $name = normalize_text($productName);
@@ -382,6 +451,7 @@ function infer_size_slug(string $productName): string
     return 'standard';
 }
 
+// Choisit l'image principale du produit.
 function pick_product_image(array $product): string
 {
     $library = candle_image_library();
@@ -402,6 +472,7 @@ function pick_product_image(array $product): string
     return (string) reset($firstFamily);
 }
 
+// Construit une petite galerie d'images secondaires.
 function build_gallery(array $product): array
 {
     $primaryImage = pick_product_image($product);
@@ -416,6 +487,7 @@ function build_gallery(array $product): array
     return array_slice($gallery, 0, 3);
 }
 
+// Devine un poids lisible a partir du nom du produit.
 function infer_weight(string $productName): string
 {
     $name = normalize_text($productName);
@@ -435,6 +507,7 @@ function infer_weight(string $productName): string
     return '220 g';
 }
 
+// Associe un temps de combustion au poids.
 function infer_burn_time(string $weight): string
 {
     return match ($weight) {
@@ -445,6 +518,8 @@ function infer_burn_time(string $weight): string
     };
 }
 
+// Enrichit un produit brut venant de la base avec des donnees utiles
+// pour l'affichage dans les pages.
 function enrich_product(array $product): array
 {
     $product['id'] = (int) ($product['id'] ?? 0);
@@ -466,6 +541,9 @@ function enrich_product(array $product): array
     return $product;
 }
 
+// Recupere tous les produits, puis garde seulement les bougies.
+// Le resultat est memorise dans une variable statique pour eviter
+// de refaire la requete plusieurs fois dans la meme page.
 function fetch_all_products(): array
 {
     static $products = null;
@@ -487,11 +565,13 @@ function fetch_all_products(): array
     return $products;
 }
 
+// Renvoie les premiers produits comme selection mise en avant.
 function fetch_featured_products(int $limit = 3): array
 {
     return array_slice(fetch_all_products(), 0, $limit);
 }
 
+// Recupere plusieurs produits a partir d'une liste d'identifiants.
 function fetch_products_by_ids(array $ids): array
 {
     $expectedIds = array_values(array_unique(array_map('intval', $ids)));
@@ -511,6 +591,7 @@ function fetch_products_by_ids(array $ids): array
     return $productsById;
 }
 
+// Recupere un seul produit par son identifiant.
 function fetch_product_by_id(int $id): ?array
 {
     $pdo = get_pdo();
@@ -531,6 +612,8 @@ function fetch_product_by_id(int $id): ?array
     return enrich_product($product);
 }
 
+// Transforme le panier brut stocke en session en lignes completes,
+// avec les donnees du produit et le total par ligne.
 function fetch_cart_lines(): array
 {
     $cart = get_cart();
@@ -562,6 +645,7 @@ function fetch_cart_lines(): array
     return $lines;
 }
 
+// Calcule le total HT du panier.
 function cart_total_price(): float
 {
     $total = 0.0;
@@ -573,11 +657,14 @@ function cart_total_price(): float
     return $total;
 }
 
+// Calcule le total TTC du panier.
 function cart_total_price_tvac(): float
 {
     return calculate_total_tvac(cart_total_price());
 }
 
+// Verifie si le panier peut encore etre valide.
+// On signale les produits manquants, hors stock ou les quantites invalides.
 function cart_validation_issues(): array
 {
     $cart = get_cart();
@@ -618,11 +705,13 @@ function cart_validation_issues(): array
     return array_values(array_unique($issues));
 }
 
+// Construit la reponse JSON envoyee au JavaScript apres modification du panier.
 function build_cart_update_payload(array $product, int $quantity, bool $removed = false, string $message = ''): array
 {
     $cartCount = cart_items_count();
     $cartTotal = cart_total_price();
     $cartTotalTvac = cart_total_price_tvac();
+    $lineTotal = $quantity > 0 ? (float) $product['prix_ht'] * $quantity : 0.0;
 
     return [
         'quantity' => $quantity,
@@ -634,13 +723,16 @@ function build_cart_update_payload(array $product, int $quantity, bool $removed 
         'cart_total_formatted' => format_price($cartTotal),
         'cart_total_tvac' => $cartTotalTvac,
         'cart_total_tvac_formatted' => format_price($cartTotalTvac),
-        'line_total' => $quantity > 0 ? (float) $product['prix_ht'] * $quantity : 0.0,
-        'line_total_formatted' => format_price($quantity > 0 ? (float) $product['prix_ht'] * $quantity : 0.0),
+        'line_total' => $lineTotal,
+        'line_total_formatted' => format_price($lineTotal),
         'stock' => (int) $product['stock'],
         'message' => $message,
     ];
 }
 
+// Cree une commande a partir du panier actuel.
+// Ici on utilise une transaction SQL pour que tout soit enregistre
+// correctement ou rien du tout en cas de probleme.
 function create_order_from_cart(array $deliveryData): int
 {
     $issues = cart_validation_issues();
@@ -673,6 +765,8 @@ function create_order_from_cart(array $deliveryData): int
     );
 
     try {
+        // Debut de la transaction : on verrouille et on met a jour
+        // toutes les donnees de commande comme un seul bloc.
         $pdo->beginTransaction();
 
         $lineItems = [];
@@ -702,6 +796,8 @@ function create_order_from_cart(array $deliveryData): int
 
             $lineTotal = (float) $product['prix_ht'] * $quantity;
             $totalHt += $lineTotal;
+
+            // On memorise les donnees utiles pour les requetes suivantes.
             $lineItems[] = [
                 'product_id' => $productId,
                 'quantity' => $quantity,
@@ -724,12 +820,14 @@ function create_order_from_cart(array $deliveryData): int
         $orderId = (int) $pdo->lastInsertId();
 
         foreach ($lineItems as $lineItem) {
+            // 1) On ajoute la ligne de commande
             $insertOrderLine->execute([
                 'commande_id' => $orderId,
                 'produit_id' => $lineItem['product_id'],
                 'quantite' => $lineItem['quantity'],
             ]);
 
+            // 2) On met a jour le stock du produit
             $updateStock->execute([
                 'stock' => $lineItem['next_stock'],
                 'disponible' => $lineItem['next_stock'] > 0 ? 1 : 0,
@@ -737,13 +835,16 @@ function create_order_from_cart(array $deliveryData): int
             ]);
         }
 
+        // Si tout s'est bien passe, on valide les changements.
         $pdo->commit();
 
+        // Une fois la commande enregistree, on vide le panier et le formulaire.
         $_SESSION['panier'] = [];
         clear_delivery_form_data();
 
         return $orderId;
     } catch (Throwable $exception) {
+        // En cas d'erreur, on annule tous les changements faits dans la transaction.
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
@@ -752,6 +853,7 @@ function create_order_from_cart(array $deliveryData): int
     }
 }
 
+// Recupere les lignes d'une commande deja enregistree.
 function fetch_order_items(int $orderId): array
 {
     $pdo = get_pdo();
@@ -780,6 +882,7 @@ function fetch_order_items(int $orderId): array
     return $items;
 }
 
+// Recupere le resume complet d'une commande.
 function fetch_order_summary(int $orderId): ?array
 {
     $pdo = get_pdo();
@@ -809,6 +912,10 @@ function fetch_order_summary(int $orderId): ?array
     return $summary;
 }
 
+// -----------------------------------------------------------------------------
+// CATALOGUE ET FILTRES
+// -----------------------------------------------------------------------------
+// Liste des categories visibles dans le formulaire de filtres.
 function catalog_categories(): array
 {
     return [
@@ -821,29 +928,41 @@ function catalog_categories(): array
     ];
 }
 
-function get_catalog_filters(): array
+// Calcule le prix maximum disponible dans le catalogue.
+function catalog_max_price(array $products): float
 {
-    $products = fetch_all_products();
-    $maxAvailable = 0.0;
+    $maxPrice = 0.0;
 
     foreach ($products as $product) {
-        if ($product['prix_ht'] > $maxAvailable) {
-            $maxAvailable = $product['prix_ht'];
+        if ($product['prix_ht'] > $maxPrice) {
+            $maxPrice = (float) $product['prix_ht'];
         }
     }
 
-    $maxAvailable = $maxAvailable > 0 ? ceil($maxAvailable) : 50.0;
+    return $maxPrice > 0 ? ceil($maxPrice) : 50.0;
+}
 
-    $category = (string) ($_GET['category'] ?? 'all');
-    if (!array_key_exists($category, catalog_categories())) {
-        $category = 'all';
-    }
+// Verifie si la categorie demandee existe bien.
+function sanitize_catalog_category(string $category): string
+{
+    return array_key_exists($category, catalog_categories()) ? $category : 'all';
+}
 
-    $sort = (string) ($_GET['sort'] ?? 'popular');
+// Verifie si le tri demande est autorise.
+function sanitize_catalog_sort(string $sort): string
+{
     $allowedSorts = ['popular', 'priceAsc', 'priceDesc', 'nameAsc'];
-    if (!in_array($sort, $allowedSorts, true)) {
-        $sort = 'popular';
-    }
+
+    return in_array($sort, $allowedSorts, true) ? $sort : 'popular';
+}
+
+// Lit les filtres de l'URL et leur donne des valeurs propres et previsibles.
+function get_catalog_filters(): array
+{
+    $products = fetch_all_products();
+    $maxAvailable = catalog_max_price($products);
+    $category = sanitize_catalog_category((string) ($_GET['category'] ?? 'all'));
+    $sort = sanitize_catalog_sort((string) ($_GET['sort'] ?? 'popular'));
 
     $maxPrice = isset($_GET['max_price']) ? (float) $_GET['max_price'] : $maxAvailable;
     if ($maxPrice <= 0) {
@@ -860,45 +979,55 @@ function get_catalog_filters(): array
     ];
 }
 
+// Verifie si un produit respecte tous les filtres du catalogue.
+function product_matches_catalog_filters(array $product, array $filters): bool
+{
+    if ($filters['q'] !== '') {
+        $needle = normalize_text($filters['q']);
+
+        if (!str_contains(product_search_text($product), $needle)) {
+            return false;
+        }
+    }
+
+    if ($filters['category'] !== 'all' && $product['category_slug'] !== $filters['category']) {
+        return false;
+    }
+
+    if ($filters['in_stock'] && !$product['in_stock']) {
+        return false;
+    }
+
+    if ($product['prix_ht'] > $filters['max_price']) {
+        return false;
+    }
+
+    return true;
+}
+
+// Compare deux produits pour savoir dans quel ordre les afficher.
+function compare_catalog_products(array $left, array $right, string $sort): int
+{
+    return match ($sort) {
+        'priceAsc' => $left['prix_ht'] <=> $right['prix_ht'],
+        'priceDesc' => $right['prix_ht'] <=> $left['prix_ht'],
+        'nameAsc' => strcmp($left['nom'], $right['nom']),
+        default => [$left['priorite'], $left['nom']] <=> [$right['priorite'], $right['nom']],
+    };
+}
+
+// Filtre puis trie les produits pour preparer l'affichage du catalogue.
 function filter_products(array $products, array $filters): array
 {
-    $filtered = array_values(array_filter($products, static function (array $product) use ($filters): bool {
-        if ($filters['q'] !== '') {
-            $needle = normalize_text($filters['q']);
-            $haystack = normalize_text(
-                $product['nom'] . ' ' .
-                ($product['description_courte'] ?? '') . ' ' .
-                ($product['description_longue'] ?? '')
-            );
+    $filtered = array_values(array_filter(
+        $products,
+        static fn (array $product): bool => product_matches_catalog_filters($product, $filters)
+    ));
 
-            if (!str_contains($haystack, $needle)) {
-                return false;
-            }
-        }
-
-        if ($filters['category'] !== 'all' && $product['category_slug'] !== $filters['category']) {
-            return false;
-        }
-
-        if ($filters['in_stock'] && !$product['in_stock']) {
-            return false;
-        }
-
-        if ($product['prix_ht'] > $filters['max_price']) {
-            return false;
-        }
-
-        return true;
-    }));
-
-    usort($filtered, static function (array $left, array $right) use ($filters): int {
-        return match ($filters['sort']) {
-            'priceAsc' => $left['prix_ht'] <=> $right['prix_ht'],
-            'priceDesc' => $right['prix_ht'] <=> $left['prix_ht'],
-            'nameAsc' => strcmp($left['nom'], $right['nom']),
-            default => [$left['priorite'], $left['nom']] <=> [$right['priorite'], $right['nom']],
-        };
-    });
+    usort(
+        $filtered,
+        static fn (array $left, array $right): int => compare_catalog_products($left, $right, $filters['sort'])
+    );
 
     return $filtered;
 }

@@ -1,14 +1,17 @@
 <?php
 declare(strict_types=1);
 
+// On charge les fonctions communes du site.
 require_once __DIR__ . '/includes/site.php';
 
+// Variables utilisees par le header HTML.
 $pageTitle = "Lueur d'Ambre - Boutique de bougies";
 $metaDescription = "Bougies artisanales parfumees pour creer une ambiance douce et chaleureuse.";
 $activePage = 'home';
 $featuredProducts = [];
 $dbError = null;
 
+// On essaie de charger les produits mis en avant.
 try {
     $featuredProducts = fetch_featured_products(3);
 } catch (Throwable $exception) {
@@ -16,6 +19,7 @@ try {
     $dbError = "Impossible d'afficher nos bougies pour le moment.";
 }
 
+// Le header affiche le menu, le titre HTML et le compteur du panier.
 require __DIR__ . '/includes/header.php';
 ?>
 <main>

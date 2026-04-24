@@ -1,11 +1,14 @@
 USE tnphsznjxz_ecommerce;
 
+-- On supprime d'abord les tables si elles existent deja
+-- pour pouvoir relancer le script proprement.
 DROP TABLE IF EXISTS commande_produit;
 DROP TABLE IF EXISTS produit_categorie;
 DROP TABLE IF EXISTS commande;
 DROP TABLE IF EXISTS categorie;
 DROP TABLE IF EXISTS produit;
 
+-- Table principale des produits vendus sur le site.
 CREATE TABLE produit (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
@@ -18,11 +21,13 @@ CREATE TABLE produit (
     priorite INT NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
+-- Liste des categories disponibles.
 CREATE TABLE categorie (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 
+-- Table de liaison entre produits et categories.
 CREATE TABLE produit_categorie (
     produit_id INT NOT NULL,
     categorie_id INT NOT NULL,
@@ -37,6 +42,7 @@ CREATE TABLE produit_categorie (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
+-- Table des commandes passees par les clients.
 CREATE TABLE commande (
     id INT AUTO_INCREMENT PRIMARY KEY,
     date_creation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -46,6 +52,7 @@ CREATE TABLE commande (
     email VARCHAR(150) NOT NULL
 ) ENGINE=InnoDB;
 
+-- Table de liaison entre une commande et les produits commandes.
 CREATE TABLE commande_produit (
     commande_id INT NOT NULL,
     produit_id INT NOT NULL,
@@ -61,6 +68,7 @@ CREATE TABLE commande_produit (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
+-- Quelques produits d'exemple pour tester le site rapidement.
 INSERT INTO produit (nom, description_courte, description_longue, prix_ht, date_enregistrement, stock, priorite)
 VALUES
 ('Bougie Vanille - Petite',

@@ -1,18 +1,23 @@
 <?php
 declare(strict_types=1);
 
+// On charge les fonctions communes du projet.
 require_once __DIR__ . '/includes/site.php';
 
+// Variables attendues par le header.
 $pageTitle = "Nos bougies - Lueur d'Ambre";
 $metaDescription = "Parcours nos bougies parfumees et trouve la senteur qui correspond a ton interieur.";
 $activePage = 'catalog';
 $filters = null;
 $products = [];
+$productCount = 0;
 $dbError = null;
 
+// On recupere les filtres de l'URL puis les produits correspondants.
 try {
     $filters = get_catalog_filters();
     $products = filter_products(fetch_all_products(), $filters);
+    $productCount = count($products);
 } catch (Throwable $exception) {
     http_response_code(500);
     $dbError = "Impossible d'afficher le catalogue de bougies pour le moment.";
@@ -102,7 +107,7 @@ require __DIR__ . '/includes/header.php';
             <h2 class="section-title-sm">Toutes les bougies</h2>
             <p class="lead">Des bougies pensees pour parfumer l'interieur avec elegance, douceur et chaleur.</p>
           </div>
-          <div class="list-meta"><?= count($products) ?> bougie<?= count($products) > 1 ? 's' : '' ?></div>
+          <div class="list-meta"><?= $productCount ?> bougie<?= $productCount > 1 ? 's' : '' ?></div>
         </div>
 
         <?php if ($dbError === null && $products === []): ?>

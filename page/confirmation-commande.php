@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// On charge les fonctions communes du projet.
 require_once __DIR__ . '/includes/site.php';
 
+// On lit le numero de commande depuis l'URL.
 $flash = pull_flash_message();
 $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $order = $orderId !== null && $orderId !== false ? fetch_order_summary((int) $orderId) : null;
@@ -11,6 +13,7 @@ if ($order === null) {
     http_response_code(404);
 }
 
+// Variables du header HTML.
 $pageTitle = $order !== null
     ? 'Commande #' . $order['id'] . " - Lueur d'Ambre"
     : "Commande introuvable - Lueur d'Ambre";
@@ -90,6 +93,8 @@ require __DIR__ . '/includes/header.php';
             <a class="btn btn-ghost" href="<?= escape(app_url('page/index.php')) ?>">Retour a l'accueil</a>
           </div>
         </article>
+
+        
       <?php endif; ?>
     </div>
   </section>

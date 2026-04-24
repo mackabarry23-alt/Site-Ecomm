@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// On charge les fonctions communes du site.
 require_once __DIR__ . '/includes/site.php';
 
+// On prepare les donnees affichees dans le recapitulatif et le formulaire.
 $pageTitle = "Livraison - Lueur d'Ambre";
 $metaDescription = "Indique tes informations de livraison pour recevoir tes bougies.";
 $activePage = 'cart';
@@ -41,6 +43,7 @@ require __DIR__ . '/includes/header.php';
             <a class="btn" href="<?= escape(app_url('page/panier.php')) ?>">Retourner au panier</a>
           </article>
         <?php else: ?>
+          <!-- Le formulaire envoie les infos de livraison pour creer la commande -->
           <form class="checkout-form" action="<?= escape(app_url('page/actions/confirmer-commande.php')) ?>" method="post">
             <article class="detail form-card">
               <div class="section-heading-left">
@@ -128,6 +131,7 @@ require __DIR__ . '/includes/header.php';
         <div class="checkout-items">
           <?php foreach ($cartLines as $line): ?>
             <?php $product = $line['product']; ?>
+            <!-- Une ligne du recapitulatif correspond a un produit du panier -->
             <article class="checkout-item">
               <img src="<?= escape($product['image']) ?>" alt="<?= escape($product['nom']) ?>" />
               <div>

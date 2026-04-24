@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 ?>
+  <!-- Pied de page commun a toutes les pages -->
   <footer id="contact">
     <div class="container">
       <div class="footer-content">
@@ -35,18 +36,39 @@ declare(strict_types=1);
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
+    // -------------------------------------------------------------------------
+    // OUTILS GENERAUX DU PANIER
+    // -------------------------------------------------------------------------
+    // Transforme une valeur en nombre d'articles fiable.
     function toCartCountNumber(count) {
       const parsedCount = Number.parseInt(count, 10);
 
       return Number.isFinite(parsedCount) && parsedCount >= 0 ? parsedCount : 0;
     }
 
+    // Cree un texte lisible comme "1 article" ou "3 articles".
     function formatCartCountLabel(count) {
       const safeCount = toCartCountNumber(count);
 
       return safeCount + ' article' + (safeCount > 1 ? 's' : '');
     }
 
+    // Verifie si la librairie Axios est bien chargee.
+    function isCartServiceReady() {
+      return typeof axios !== 'undefined';
+    }
+
+    // Essaie de lire un message d'erreur renvoye par le serveur.
+    function readCartErrorMessage(error, fallbackMessage) {
+      return error && error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : fallbackMessage;
+    }
+
+    // -------------------------------------------------------------------------
+    // MISE A JOUR DE L'INTERFACE
+    // -------------------------------------------------------------------------
+    // Met a jour tous les compteurs du panier affiches dans la page.
     function updateCartCounters(count) {
       const safeCount = toCartCountNumber(count);
 
@@ -55,6 +77,7 @@ declare(strict_types=1);
       });
     }
 
+    // Met a jour les libelles du type "2 articles".
     function updateCartCountLabels(count) {
       const label = formatCartCountLabel(count);
 
@@ -68,6 +91,7 @@ declare(strict_types=1);
       updateCartCountLabels(count);
     }
 
+    // Met a jour les totaux du panier.
     function updateCartTotals(formattedTotal, formattedTotalTvac = null) {
       document.querySelectorAll('[data-cart-total]').forEach((element) => {
         element.textContent = formattedTotal;
@@ -80,6 +104,7 @@ declare(strict_types=1);
       }
     }
 
+    // Affiche ou masque l'etat "panier vide".
     function toggleCartEmptyState(isEmpty) {
       document.querySelectorAll('[data-cart-empty]').forEach((element) => {
         element.hidden = !isEmpty;
@@ -94,6 +119,7 @@ declare(strict_types=1);
       });
     }
 
+    // Affiche un petit message temporaire en haut de page.
     function showCartFeedback(message, isError = false) {
       document.querySelectorAll('[data-cart-feedback]').forEach((element) => {
         element.hidden = false;
@@ -108,12 +134,14 @@ declare(strict_types=1);
       });
     }
 
+    // Quantite minimale pour l'ajout au panier : 1.
     function normalizeCartQuantity(quantity) {
       const parsedQuantity = Number.parseInt(quantity, 10);
 
       return Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1;
     }
 
+    // Quantite editable dans le panier : entre 0 et le stock max.
     function normalizeEditableCartQuantity(quantity, maxQuantity = Number.MAX_SAFE_INTEGER) {
       const parsedQuantity = Number.parseInt(quantity, 10);
       const safeMaxQuantity = Math.max(0, Number.parseInt(maxQuantity, 10) || 0);
@@ -125,6 +153,7 @@ declare(strict_types=1);
       return Math.min(Math.max(parsedQuantity, 0), safeMaxQuantity);
     }
 
+    // Redonne son texte d'origine au bouton "Ajouter au panier".
     function resetCartButtonLabel(button) {
       if (!button) {
         return;
@@ -135,10 +164,14 @@ declare(strict_types=1);
       }, 1500);
     }
 
+    // -------------------------------------------------------------------------
+    // AJOUT AU PANIER
+    // -------------------------------------------------------------------------
+    // Ajoute une bougie au panier via une requete AJAX.
     function addToCart(productId, quantity = 1, button = null) {
       const safeQuantity = normalizeCartQuantity(quantity);
 
-      if (typeof axios === 'undefined') {
+      if (!isCartServiceReady()) {
         showCartFeedback('Le service panier est indisponible pour le moment.', true);
         return;
       }
@@ -172,6 +205,7 @@ declare(strict_types=1);
         });
     }
 
+    // Lit la quantite depuis un champ <input> puis appelle addToCart().
     function addToCartFromInput(productId, inputId, button = null) {
       const input = document.getElementById(inputId);
       const quantity = input ? input.value : 1;
@@ -179,16 +213,22 @@ declare(strict_types=1);
       addToCart(productId, quantity, button);
     }
 
+    // -------------------------------------------------------------------------
+    // MODIFICATION DU PANIER
+    // -------------------------------------------------------------------------
+    // Retourne l'input de quantite correspondant a un produit.
     function getCartQuantityInput(productId) {
       return document.querySelector('[data-cart-input="' + productId + '"]');
     }
 
+    // Desactive ou reactive les controles d'une ligne pendant la requete AJAX.
     function setCartLineBusy(productId, busy) {
       document.querySelectorAll('[data-cart-control="' + productId + '"]').forEach((element) => {
         element.disabled = busy;
       });
     }
 
+    // Change la quantite avec les boutons + et -.
     function changeCartQuantity(productId, delta) {
       const input = getCartQuantityInput(productId);
 
@@ -205,6 +245,7 @@ declare(strict_types=1);
       submitCartQuantity(productId, nextValue);
     }
 
+    // Met a jour une ligne du panier apres la reponse du serveur.
     function applyCartLineUpdate(productId, payload) {
       updateCartDisplays(payload.cart_count);
       updateCartTotals(payload.cart_total_formatted, payload.cart_total_tvac_formatted);
@@ -236,8 +277,9 @@ declare(strict_types=1);
       }
     }
 
+    // Envoie au serveur la nouvelle quantite d'une ligne du panier.
     function submitCartQuantity(productId, quantity) {
-      if (typeof axios === 'undefined') {
+      if (!isCartServiceReady()) {
         showCartFeedback('Le service panier est indisponible pour le moment.', true);
         return;
       }
@@ -269,9 +311,10 @@ declare(strict_types=1);
             input.value = previousValue;
           }
 
-          const message = error && error.response && error.response.data && error.response.data.message
-            ? error.response.data.message
-            : 'Impossible de mettre a jour la quantite pour le moment.';
+          const message = readCartErrorMessage(
+            error,
+            'Impossible de mettre a jour la quantite pour le moment.'
+          );
 
           showCartFeedback(message, true);
         })
